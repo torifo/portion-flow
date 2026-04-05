@@ -8,10 +8,15 @@ function arbitraryMember(): fc.Arbitrary<PortionHolder> {
     id: fc.uuid(),
     name: fc.string(),
     weight: fc.integer({ min: 0, max: 100 }),
+    groupId: fc.constant(null),
     fixedAmount: fc.option(fc.integer({ min: 0, max: 500 }), { nil: null }),
     memo: fc.string(),
     done: fc.boolean(),
   });
+}
+
+function m(overrides: Partial<PortionHolder> & { id: string }): PortionHolder {
+  return { name: '', weight: 1, groupId: null, fixedAmount: null, memo: '', done: false, ...overrides };
 }
 
 describe('Distributor', () => {
@@ -26,7 +31,6 @@ describe('Distributor', () => {
             .reduce((s, m) => s + (m.fixedAmount ?? 0), 0);
           if (fixedSum > total) return true;
 
-          // weight=0のみの可変メンバーでは剰余配布不可 (スキップ)
           const variableWeightSum = members
             .filter((m) => m.fixedAmount === null)
             .reduce((s, m) => s + m.weight, 0);
@@ -97,26 +101,23 @@ describe('Distributor', () => {
   });
 
   it('throws FIXED_EXCEEDS_TOTAL when fixed amounts exceed total', () => {
-    const members: PortionHolder[] = [
-      { id: '1', name: 'A', weight: 1, fixedAmount: 300, memo: '', done: false },
-      { id: '2', name: 'B', weight: 1, fixedAmount: 200, memo: '', done: false },
+    const members = [
+      m({ id: '1', fixedAmount: 300 }),
+      m({ id: '2', fixedAmount: 200 }),
     ];
     expect(() => distribute(400, members)).toThrow('FIXED_EXCEEDS_TOTAL');
   });
 
   it('single member gets the entire total amount', () => {
-    const members: PortionHolder[] = [
-      { id: '1', name: 'A', weight: 5, fixedAmount: null, memo: '', done: false },
-    ];
-    const results = distribute(400, members);
+    const results = distribute(400, [m({ id: '1', weight: 5 })]);
     expect(results[0].portion).toBe(400);
   });
 
   it('distributes 400 evenly among 3 members with weight 1:2:1', () => {
-    const members: PortionHolder[] = [
-      { id: '1', name: 'A', weight: 1, fixedAmount: null, memo: '', done: false },
-      { id: '2', name: 'B', weight: 2, fixedAmount: null, memo: '', done: false },
-      { id: '3', name: 'C', weight: 1, fixedAmount: null, memo: '', done: false },
+    const members = [
+      m({ id: '1', weight: 1 }),
+      m({ id: '2', weight: 2 }),
+      m({ id: '3', weight: 1 }),
     ];
     const results = distribute(400, members);
     const sum = results.reduce((s, r) => s + r.portion, 0);

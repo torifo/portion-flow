@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { usePortionState } from './hooks/usePortionState';
 import { useTheme } from './hooks/useTheme';
 import { distribute } from './core/distributor';
@@ -16,16 +16,16 @@ export default function App() {
     addMember,
     removeMember,
     updateMember,
+    addGroup,
+    updateGroup,
+    removeGroup,
+    assignGroup,
     importState,
   } = usePortionState();
 
   const { setTheme: applyThemeCss } = useTheme();
 
-  const prevTheme = useRef(state.theme);
   useEffect(() => {
-    if (prevTheme.current !== state.theme) {
-      prevTheme.current = state.theme;
-    }
     applyThemeCss(state.theme);
   }, [state.theme]);
 
@@ -50,7 +50,7 @@ export default function App() {
       setFixedError('');
     } catch (e) {
       if (e instanceof Error && e.message === 'FIXED_EXCEEDS_TOTAL') {
-        setFixedError('固定額の合計が総額を超えています');
+        setFixedError('固定値の合計が合計値を超えています');
         setResults(state.members.map((m) => ({ id: m.id, portion: 0, remainder: 0 })));
       }
     }
@@ -68,28 +68,58 @@ export default function App() {
     }
   };
 
+  const totalPortioned = results.reduce((s, r) => s + r.portion, 0);
+  const doneCount = state.members.filter((m) => m.done).length;
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">💰 Portion-Flow</h1>
+        <div className="header-left">
+          <span className="app-logo">⚖️</span>
+          <h1 className="app-title">Portion-Flow</h1>
+        </div>
         <ThemeSwitcher current={state.theme} onChange={handleThemeChange} />
       </header>
 
       <main className="app-main">
-        <div className="total-section">
-          <label className="total-label" htmlFor="total-input">
-            総額
-          </label>
-          <input
-            id="total-input"
-            className={`total-input ${totalError ? 'error' : ''}`}
-            type="number"
-            min={1}
-            value={totalInput}
-            onChange={handleTotalChange}
-          />
-          {totalError && <p className="error-msg">{totalError}</p>}
-          {fixedError && <p className="error-msg">{fixedError}</p>}
+        <div className="summary-bar">
+          <div className="summary-field">
+            <span className="summary-label">合計値</span>
+            <div className="total-input-wrap">
+              <input
+                id="total-input"
+                className={`total-input${totalError ? ' error' : ''}`}
+                type="number"
+                min={1}
+                value={totalInput}
+                onChange={handleTotalChange}
+              />
+              {totalError && <span className="field-error">{totalError}</span>}
+            </div>
+          </div>
+
+          <div className="summary-stats">
+            <div className="stat">
+              <span className="stat-value">{state.members.length}</span>
+              <span className="stat-label">人</span>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat">
+              <span className="stat-value">{totalPortioned.toLocaleString()}</span>
+              <span className="stat-label">配分済</span>
+            </div>
+            {doneCount > 0 && (
+              <>
+                <div className="stat-divider" />
+                <div className="stat">
+                  <span className="stat-value">{doneCount}</span>
+                  <span className="stat-label">完了</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {fixedError && <p className="error-banner">{fixedError}</p>}
         </div>
 
         <ActionBar state={state} results={results} onImport={importState} />
@@ -97,9 +127,14 @@ export default function App() {
         <PortionList
           members={state.members}
           results={results}
+          groups={state.groups}
           onAdd={addMember}
           onRemove={removeMember}
           onUpdate={updateMember}
+          onAddGroup={addGroup}
+          onUpdateGroup={updateGroup}
+          onRemoveGroup={removeGroup}
+          onAssignGroup={assignGroup}
         />
       </main>
     </div>

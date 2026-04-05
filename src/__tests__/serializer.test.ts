@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import type { AppState, PortionHolder } from '../types';
 
-// Mock localStorage for Node environment
 beforeEach(() => {
   const store: Record<string, string> = {};
   vi.stubGlobal('localStorage', {
@@ -18,6 +17,7 @@ function arbitraryMember(): fc.Arbitrary<PortionHolder> {
     id: fc.uuid(),
     name: fc.string({ maxLength: 50 }),
     weight: fc.integer({ min: 0, max: 100 }),
+    groupId: fc.constant(null),
     fixedAmount: fc.option(fc.integer({ min: 0, max: 9999 }), { nil: null }),
     memo: fc.string({ maxLength: 100 }),
     done: fc.boolean(),
@@ -28,6 +28,7 @@ function arbitraryAppState(): fc.Arbitrary<AppState> {
   return fc.record({
     totalAmount: fc.integer({ min: 1, max: 99999 }),
     members: fc.array(arbitraryMember(), { minLength: 1, maxLength: 10 }),
+    groups: fc.constant([]),
     theme: fc.constantFrom('standard' as const, 'senior' as const, 'children' as const),
   });
 }
@@ -61,8 +62,9 @@ describe('Serializer', () => {
     const state: AppState = {
       totalAmount: 400,
       theme: 'standard',
+      groups: [],
       members: [
-        { id: '1', name: 'Alice', weight: 1, fixedAmount: null, memo: '', done: false },
+        { id: '1', name: 'Alice', weight: 1, groupId: null, fixedAmount: null, memo: '', done: false },
       ],
     };
     saveToLocalStorage(state);
