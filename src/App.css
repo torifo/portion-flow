@@ -41,6 +41,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background .25s, color .25s;
+  overflow-x: hidden;
 }
 
 button { font-family: inherit; cursor: pointer; }
@@ -431,7 +432,9 @@ input  { font-family: inherit; }
   background: transparent;
   color: var(--text-1);
   outline: none;
-  width: 120px;
+  flex: 1;
+  min-width: 60px;
+  width: auto;
   transition: border-color .15s;
 }
 .group-name-input:focus { border-bottom-color: var(--border-focus); }
@@ -443,7 +446,7 @@ input  { font-family: inherit; }
   margin-left: auto;
 }
 
-.group-weight-slider { width: 160px; }
+.group-weight-slider { width: 160px; flex-shrink: 0; }
 
 .group-member-count {
   font-size: 11px;
@@ -899,14 +902,34 @@ input  { font-family: inherit; }
 
   .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); align-items: start; gap: 8px; padding: 8px; }
   .portion-value { font-size: 30px; }
+
+  /* タブレット縦でもスライダーを2行目に */
+  .group-weight-label { display: none; }
+  .group-weight-slider {
+    order: 10;
+    flex-basis: 100%;
+    width: 100%;
+  }
 }
 
 /* Mobile */
 @media (max-width: 440px) {
   .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .theme-btn { padding: 4px 8px; }
+
+  /* グループヘッダー: 2行レイアウト
+     Row1: ドット + 名前 + メンバー数 + 削除ボタン
+     Row2: スライダー（全幅）                      */
   .group-header { gap: 6px; }
   .group-weight-label { display: none; }
+  .group-weight-slider {
+    order: 10;          /* 他の要素より後ろに描画 */
+    flex-basis: 100%;   /* 単独で1行を占有 */
+    width: 100%;
+  }
+
+  /* カード内スライダー: 数値入力を非表示にして幅を確保 */
+  .card-controls .slider-number-input { display: none; }
 }
 
 /* Very small / single column */
