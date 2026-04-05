@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import type { PortionHolder, DistributionResult, Group } from '../types';
 import { PortionCard } from './PortionCard';
 import { WeightSlider } from './WeightSlider';
@@ -29,18 +30,51 @@ export function PortionList({
 }: Props) {
   const canDelete = members.length > 1;
 
-  // グループなしのメンバー
+  // Drag state
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [overZone, setOverZone] = useState<string | null>(null); // groupId | 'ungrouped' | null
+
+  const handleDrop = useCallback(
+    (targetGroupId: string | null) => {
+      if (draggedId) {
+        onAssignGroup(draggedId, targetGroupId);
+      }
+      setDraggedId(null);
+      setOverZone(null);
+    },
+    [draggedId, onAssignGroup]
+  );
+
+  const dropZoneProps = (zoneKey: string, targetGroupId: string | null) => ({
+    onDragOver: (e: React.DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setOverZone(zoneKey);
+    },
+    onDragLeave: () => setOverZone(null),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      handleDrop(targetGroupId);
+    },
+  });
+
   const ungrouped = members.filter((m) => !m.groupId);
-  // グループ別メンバー
   const byGroup = (gId: string) => members.filter((m) => m.groupId === gId);
 
   return (
     <div className="portion-list">
-      {/* グループセクション */}
+      {/* ── グループセクション ── */}
       {groups.map((group) => {
         const gMembers = byGroup(group.id);
+        const isOver = overZone === group.id;
+
         return (
-          <section key={group.id} className="group-section">
+          <section
+            key={group.id}
+            className={`group-section${isOver ? ' drop-active' : ''}`}
+            style={{ '--group-color': group.color } as React.CSSProperties}
+            {...dropZoneProps(group.id, group.id)}
+          >
             <div className="group-header">
               <span className="group-color-dot" style={{ background: group.color }} />
               <input
@@ -48,7 +82,7 @@ export function PortionList({
                 value={group.name}
                 onChange={(e) => onUpdateGroup(group.id, { name: e.target.value })}
               />
-              <span className="group-weight-label">グループWT</span>
+              <span className="group-weight-label">WT</span>
               <div className="group-weight-slider">
                 <WeightSlider
                   value={group.weight}
@@ -56,6 +90,7 @@ export function PortionList({
                   color={group.color}
                 />
               </div>
+              <span className="group-member-count">{gMembers.length}人</span>
               <button
                 className="icon-btn danger-btn small"
                 onClick={() => onRemoveGroup(group.id)}
@@ -64,6 +99,7 @@ export function PortionList({
                 ✕
               </button>
             </div>
+
             <div className="cards-grid">
               {gMembers.map((member) => (
                 <PortionCard
@@ -72,11 +108,15 @@ export function PortionList({
                   result={results.find((r) => r.id === member.id)}
                   canDelete={canDelete}
                   groups={groups}
+                  isDragging={draggedId === member.id}
                   onUpdate={(patch) => onUpdate(member.id, patch)}
                   onDelete={() => onRemove(member.id)}
                   onAssignGroup={(gId) => onAssignGroup(member.id, gId)}
+                  onDragStart={() => setDraggedId(member.id)}
+                  onDragEnd={() => { setDraggedId(null); setOverZone(null); }}
                 />
               ))}
+              {/* グループ内追加ボタン */}
               <button
                 className="add-member-in-group-btn"
                 style={{ borderColor: group.color + '88', color: group.color }}
@@ -86,29 +126,45 @@ export function PortionList({
                 ＋ メンバー追加
               </button>
             </div>
+
+            {isOver && draggedId && (
+              <div className="drop-hint">ここにドロップ → {group.name} へ移動</div>
+            )}
           </section>
         );
       })}
 
-      {/* グループなしメンバー */}
-      {ungrouped.length > 0 && (
-        <div className="cards-grid">
-          {ungrouped.map((member) => (
-            <PortionCard
-              key={member.id}
-              member={member}
-              result={results.find((r) => r.id === member.id)}
-              canDelete={canDelete}
-              groups={groups}
-              onUpdate={(patch) => onUpdate(member.id, patch)}
-              onDelete={() => onRemove(member.id)}
-              onAssignGroup={(gId) => onAssignGroup(member.id, gId)}
-            />
-          ))}
-        </div>
-      )}
+      {/* ── グループなしエリア ── */}
+      <div
+        className={`ungrouped-area${overZone === 'ungrouped' ? ' drop-active' : ''}`}
+        {...dropZoneProps('ungrouped', null)}
+      >
+        {ungrouped.length > 0 && (
+          <div className="cards-grid">
+            {ungrouped.map((member) => (
+              <PortionCard
+                key={member.id}
+                member={member}
+                result={results.find((r) => r.id === member.id)}
+                canDelete={canDelete}
+                groups={groups}
+                isDragging={draggedId === member.id}
+                onUpdate={(patch) => onUpdate(member.id, patch)}
+                onDelete={() => onRemove(member.id)}
+                onAssignGroup={(gId) => onAssignGroup(member.id, gId)}
+                onDragStart={() => setDraggedId(member.id)}
+                onDragEnd={() => { setDraggedId(null); setOverZone(null); }}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* 追加ボタン群 */}
+        {overZone === 'ungrouped' && draggedId && (
+          <div className="drop-hint ungrouped-hint">ここにドロップ → グループから外す</div>
+        )}
+      </div>
+
+      {/* ── 追加ボタン群 ── */}
       <div className="list-actions">
         <button
           className="add-btn"
@@ -117,10 +173,7 @@ export function PortionList({
         >
           ＋ メンバー追加
         </button>
-        <button
-          className="add-group-btn"
-          onClick={onAddGroup}
-        >
+        <button className="add-group-btn" onClick={onAddGroup}>
           ＋ グループ作成
         </button>
       </div>

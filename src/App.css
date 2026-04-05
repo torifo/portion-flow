@@ -332,6 +332,54 @@ input  { font-family: inherit; }
 
 .group-weight-slider { width: 120px; }
 
+.group-member-count {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  background: var(--bg-app);
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+/* Drag & Drop */
+.group-section.drop-active {
+  border-color: var(--group-color, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--group-color, var(--accent)) 20%, transparent);
+  background: color-mix(in srgb, var(--group-color, var(--accent)) 4%, var(--bg-card));
+}
+
+.ungrouped-area {
+  min-height: 12px;
+  border-radius: var(--radius-card);
+  transition: background .15s, box-shadow .15s;
+}
+
+.ungrouped-area.drop-active {
+  background: var(--accent-dim);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.drop-hint {
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  color: var(--accent-text);
+  font-weight: 500;
+  animation: fadeIn .15s ease;
+}
+
+.ungrouped-hint {
+  padding: 10px;
+  border-radius: var(--radius-card);
+  background: var(--accent-dim);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* Cards grid */
 .cards-grid {
   display: grid;
@@ -413,6 +461,17 @@ input  { font-family: inherit; }
   align-items: center;
   gap: 6px;
   padding: 10px 10px 6px;
+  cursor: grab;
+}
+.card-header:active { cursor: grabbing; }
+
+.drag-handle {
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+  letter-spacing: -1px;
 }
 
 .group-dot {
@@ -487,6 +546,14 @@ input  { font-family: inherit; }
 }
 .toggle-checkbox { width: 14px; height: 14px; accent-color: var(--accent); }
 .toggle-text { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+.group-hint {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+  padding-left: 2px;
+  font-style: italic;
+}
 
 /* Fixed amount input */
 .fixed-input {

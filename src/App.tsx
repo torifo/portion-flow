@@ -84,7 +84,7 @@ export default function App() {
       <main className="app-main">
         <div className="summary-bar">
           <div className="summary-field">
-            <span className="summary-label">合計値</span>
+            <span className="summary-label">値</span>
             <div className="total-input-wrap">
               <input
                 id="total-input"

@@ -98,11 +98,11 @@ export function ActionBar({ state, results, onImport }: Props) {
         </button>
         <button className="action-btn" onClick={handleExport} title="JSONでエクスポート">
           <span className="btn-icon">📤</span>
-          <span className="btn-label">書き出し</span>
+          <span className="btn-label">エクスポート</span>
         </button>
         <button className="action-btn" onClick={() => fileInputRef.current?.click()} title="JSONをインポート">
           <span className="btn-icon">📥</span>
-          <span className="btn-label">読み込み</span>
+          <span className="btn-label">インポート</span>
         </button>
         <input
           ref={fileInputRef}

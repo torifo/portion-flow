@@ -8,9 +8,12 @@ interface Props {
   result: DistributionResult | undefined;
   canDelete: boolean;
   groups: Group[];
+  isDragging: boolean;
   onUpdate: (patch: Partial<PortionHolder>) => void;
   onDelete: () => void;
   onAssignGroup: (groupId: string | null) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
 }
 
 export function PortionCard({
@@ -18,29 +21,41 @@ export function PortionCard({
   result,
   canDelete,
   groups,
+  isDragging,
   onUpdate,
   onDelete,
   onAssignGroup,
+  onDragStart,
+  onDragEnd,
 }: Props) {
   const portion = result?.portion ?? 0;
   const pager = findPagerEntry(portion);
   const isFixed = member.fixedAmount !== null;
   const group = groups.find((g) => g.id === member.groupId);
+  const inGroup = !!member.groupId;
 
   const [showGroupPicker, setShowGroupPicker] = useState(false);
 
   const groupColor = group?.color;
-  const borderStyle = groupColor
-    ? { borderLeftColor: groupColor, borderLeftWidth: '4px' }
-    : {};
+  const cardStyle: React.CSSProperties = {
+    borderLeftColor: groupColor ?? 'var(--border)',
+    opacity: isDragging ? 0.4 : 1,
+  };
 
   return (
     <div
       className={`portion-card${member.done ? ' done' : ''}`}
-      style={borderStyle}
+      style={cardStyle}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
     >
-      {/* Header */}
+      {/* Drag handle + Header */}
       <div className="card-header">
+        <span className="drag-handle" title="ドラッグして移動">⠿</span>
         {group && (
           <span
             className="group-dot"
@@ -81,20 +96,36 @@ export function PortionCard({
         )}
       </div>
 
-      {/* Weight or Fixed */}
+      {/* Controls: グループ内はデフォルト固定値OFF可能、グループ外は通常ウェイト */}
       <div className="card-controls">
         <div className="control-row">
-          <label className="toggle-label">
-            <input
-              type="checkbox"
-              className="toggle-checkbox"
-              checked={isFixed}
-              onChange={(e) =>
-                onUpdate({ fixedAmount: e.target.checked ? 0 : null })
-              }
-            />
-            <span className="toggle-text">固定値</span>
-          </label>
+          {inGroup && (
+            <label className="toggle-label" title="グループの均等配分から外して個別に設定">
+              <input
+                type="checkbox"
+                className="toggle-checkbox"
+                checked={isFixed}
+                onChange={(e) =>
+                  onUpdate({ fixedAmount: e.target.checked ? portion : null })
+                }
+              />
+              <span className="toggle-text">個別指定</span>
+            </label>
+          )}
+          {!inGroup && (
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                className="toggle-checkbox"
+                checked={isFixed}
+                onChange={(e) =>
+                  onUpdate({ fixedAmount: e.target.checked ? portion : null })
+                }
+              />
+              <span className="toggle-text">固定値</span>
+            </label>
+          )}
+
           {isFixed ? (
             <input
               className="fixed-input"
@@ -107,14 +138,17 @@ export function PortionCard({
             <WeightSlider
               value={member.weight}
               onChange={(v) => onUpdate({ weight: v })}
-              disabled={!!member.groupId}
+              disabled={inGroup && !isFixed}
               color={groupColor}
             />
           )}
         </div>
+        {inGroup && !isFixed && (
+          <p className="group-hint">グループウェイトに連動</p>
+        )}
       </div>
 
-      {/* Footer: memo + done + group */}
+      {/* Footer: memo + done + group picker */}
       <div className="card-footer">
         <input
           className="memo-input"
@@ -135,9 +169,12 @@ export function PortionCard({
           <div className="group-picker-wrap">
             <button
               className="group-tag-btn"
-              style={group ? { background: group.color + '22', color: group.color, borderColor: group.color + '55' } : undefined}
+              style={
+                group
+                  ? { background: group.color + '22', color: group.color, borderColor: group.color + '66' }
+                  : undefined
+              }
               onClick={() => setShowGroupPicker((v) => !v)}
-              title="グループを変更"
             >
               {group ? group.name : '＋ グループ'}
             </button>
@@ -147,7 +184,7 @@ export function PortionCard({
                   className="group-option"
                   onClick={() => { onAssignGroup(null); setShowGroupPicker(false); }}
                 >
-                  なし
+                  グループなし
                 </button>
                 {groups.map((g) => (
                   <button
