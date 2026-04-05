@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type DragEvent } from 'react';
+import type { CSSProperties } from 'react';
 import type { PortionHolder, DistributionResult, Group, ValueConstraint } from '../types';
 import { PortionCard } from './PortionCard';
 import { WeightSlider } from './WeightSlider';
@@ -48,13 +49,13 @@ export function PortionList({
   );
 
   const dropZoneProps = (zoneKey: string, targetGroupId: string | null) => ({
-    onDragOver: (e: React.DragEvent) => {
+    onDragOver: (e: DragEvent) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       setOverZone(zoneKey);
     },
     onDragLeave: () => setOverZone(null),
-    onDrop: (e: React.DragEvent) => {
+    onDrop: (e: DragEvent) => {
       e.preventDefault();
       handleDrop(targetGroupId);
     },
@@ -74,7 +75,7 @@ export function PortionList({
           <section
             key={group.id}
             className={`group-section${isOver ? ' drop-active' : ''}`}
-            style={{ '--group-color': group.color } as React.CSSProperties}
+            style={{ '--group-color': group.color } as CSSProperties}
             {...dropZoneProps(group.id, group.id)}
           >
             <div className="group-header">

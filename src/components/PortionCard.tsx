@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { PortionHolder, DistributionResult, Group, ValueConstraint } from '../types';
 import { WeightSlider } from './WeightSlider';
 import { findPagerEntry } from '../core/pagerIndicator';
@@ -62,7 +63,7 @@ export function PortionCard({
   const needsMultiRound = vc.enabled && portion > vc.max;
   const rounds = needsMultiRound ? splitIntoRounds(portion, vc.max, vc.min) : null;
 
-  const cardStyle: React.CSSProperties = {
+  const cardStyle: CSSProperties = {
     borderLeftColor: groupColor ?? 'var(--border)',
     opacity: isDragging ? 0.4 : 1,
   };

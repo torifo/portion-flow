@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { usePortionState } from './hooks/usePortionState';
 import { useTheme } from './hooks/useTheme';
 import { distribute } from './core/distributor';
@@ -67,7 +67,7 @@ export default function App() {
     }
   }, [state.totalAmount, state.members]);
 
-  const handleTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     setTotalInput(raw);
     const n = parseInt(raw, 10);
