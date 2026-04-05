@@ -443,7 +443,7 @@ input  { font-family: inherit; }
   margin-left: auto;
 }
 
-.group-weight-slider { width: 120px; }
+.group-weight-slider { width: 160px; }
 
 .group-member-count {
   font-size: 11px;
@@ -497,6 +497,7 @@ input  { font-family: inherit; }
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  align-items: start;
   gap: 12px;
   padding: 12px;
 }
@@ -507,6 +508,7 @@ input  { font-family: inherit; }
   align-items: center;
   justify-content: center;
   min-height: 80px;
+  align-self: stretch;        /* カードと行の高さを揃える */
   border: 1.5px dashed;
   border-radius: var(--radius-card);
   background: transparent;
@@ -735,7 +737,25 @@ input  { font-family: inherit; }
 .weight-slider { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .slider-input { flex: 1; accent-color: var(--accent); cursor: pointer; min-width: 0; }
 .slider-input:disabled { opacity: .35; cursor: not-allowed; }
-.slider-value { font-size: 11px; color: var(--text-3); min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
+.slider-number-input {
+  width: 42px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-2);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.slider-number-input::-webkit-inner-spin-button,
+.slider-number-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.slider-number-input:focus { border-color: var(--border-focus); }
+.slider-number-input:disabled { opacity: .35; cursor: not-allowed; }
 
 /* Card footer */
 .card-footer {
@@ -877,7 +897,7 @@ input  { font-family: inherit; }
   .summary-bar { padding: 10px 14px; gap: 12px; }
   .summary-stats { margin-left: 0; }
 
-  .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; padding: 8px; }
+  .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); align-items: start; gap: 8px; padding: 8px; }
   .portion-value { font-size: 30px; }
 }
 

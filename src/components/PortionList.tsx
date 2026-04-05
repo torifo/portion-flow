@@ -153,6 +153,7 @@ export function PortionList({
                 canDelete={canDelete}
                 groups={groups}
                 isDragging={draggedId === member.id}
+                valueConstraint={valueConstraint}
                 onUpdate={(patch) => onUpdate(member.id, patch)}
                 onDelete={() => onRemove(member.id)}
                 onAssignGroup={(gId) => onAssignGroup(member.id, gId)}
