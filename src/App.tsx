@@ -42,8 +42,6 @@ export default function App() {
   const [fixedError, setFixedError] = useState('');
   const [results, setResults] = useState<DistributionResult[]>([]);
   const [showConstraintEditor, setShowConstraintEditor] = useState(false);
-
-  // constraint range inputs (local only, committed on blur)
   const [minInput, setMinInput] = useState(String(vc.min));
   const [maxInput, setMaxInput] = useState(String(vc.max));
 
@@ -75,18 +73,10 @@ export default function App() {
     const n = parseInt(raw, 10);
     if (isNaN(n) || n < 1) {
       setTotalError('1以上の整数を入力してください');
-      return;
+    } else {
+      setTotalAmount(n);
+      setTotalError('');
     }
-    if (vc.enabled && n > vc.max) {
-      setTotalError(`制限により最大 ${vc.max} です`);
-      return;
-    }
-    if (vc.enabled && n < vc.min) {
-      setTotalError(`制限により最小 ${vc.min} です`);
-      return;
-    }
-    setTotalAmount(n);
-    setTotalError('');
   };
 
   const commitMin = () => {
@@ -102,8 +92,6 @@ export default function App() {
     const n = parseInt(maxInput, 10);
     if (!isNaN(n) && n > vc.min) {
       setValueConstraint({ max: n });
-      // 現在の totalAmount が新しい max を超えていれば丸める
-      if (state.totalAmount > n) setTotalAmount(n);
     } else {
       setMaxInput(String(vc.max));
     }
@@ -112,13 +100,10 @@ export default function App() {
   const totalPortioned = results.reduce((s, r) => s + r.portion, 0);
   const doneCount = state.members.filter((m) => m.done).length;
 
-  // 制限違反の警告
-  const constraintWarning =
-    vc.enabled && state.totalAmount > vc.max
-      ? `値が制限の最大値（${vc.max}）を超えています`
-      : vc.enabled && state.totalAmount < vc.min
-      ? `値が制限の最小値（${vc.min}）を下回っています`
-      : null;
+  // 複数回割り当てが必要なメンバー数
+  const multiRoundCount = vc.enabled
+    ? results.filter((r) => r.portion > vc.max).length
+    : 0;
 
   return (
     <div className="app">
@@ -132,39 +117,36 @@ export default function App() {
 
       <main className="app-main">
         <div className="summary-bar">
-          {/* 値 + 制限設定 */}
+          {/* 値入力 */}
           <div className="summary-field">
-            <span className="summary-label">値</span>
+            <span className="summary-label">合計値</span>
             <div className="total-input-wrap">
               <input
                 id="total-input"
-                className={`total-input${totalError || constraintWarning ? ' error' : ''}`}
+                className={`total-input${totalError ? ' error' : ''}`}
                 type="number"
-                min={vc.enabled ? vc.min : 1}
-                max={vc.enabled ? vc.max : undefined}
+                min={1}
                 value={totalInput}
                 onChange={handleTotalChange}
               />
               {vc.enabled && (
-                <span className="constraint-badge">
-                  {vc.min}〜{vc.max}
+                <span className="constraint-badge" title="1人1回あたりの上限">
+                  1回 {vc.min}〜{vc.max}
                 </span>
               )}
               <button
                 className={`constraint-toggle-btn${showConstraintEditor ? ' active' : ''}`}
                 onClick={() => setShowConstraintEditor((v) => !v)}
-                title="値の制限を設定"
+                title="1人1回あたりの割り当て上限を設定"
                 aria-label="制限設定"
               >
                 ⚙
               </button>
             </div>
-            {(totalError || constraintWarning) && (
-              <span className="field-error">{totalError || constraintWarning}</span>
-            )}
+            {totalError && <span className="field-error">{totalError}</span>}
           </div>
 
-          {/* 制限エディタ（展開時） */}
+          {/* 制限エディタ */}
           {showConstraintEditor && (
             <div className="constraint-editor">
               <label className="constraint-enabled-label">
@@ -173,7 +155,7 @@ export default function App() {
                   checked={vc.enabled}
                   onChange={(e) => setValueConstraint({ enabled: e.target.checked })}
                 />
-                <span>値の範囲を制限する</span>
+                <span>1人1回あたりの割り当て値を制限する</span>
               </label>
               {vc.enabled && (
                 <div className="constraint-range">
@@ -200,15 +182,16 @@ export default function App() {
                   />
                   <button
                     className="constraint-reset-btn"
-                    onClick={() => {
-                      setValueConstraint({ min: 0, max: 120 });
-                    }}
+                    onClick={() => setValueConstraint({ min: 0, max: 120 })}
                     title="デフォルト（0〜120）に戻す"
                   >
                     リセット
                   </button>
                 </div>
               )}
+              <p className="constraint-hint">
+                1回の割り当てで渡せる値の上限。超えた場合は複数回に分けて割り当ててください。
+              </p>
             </div>
           )}
 
@@ -223,6 +206,15 @@ export default function App() {
               <span className="stat-value">{totalPortioned.toLocaleString()}</span>
               <span className="stat-label">配分済</span>
             </div>
+            {multiRoundCount > 0 && (
+              <>
+                <div className="stat-divider" />
+                <div className="stat stat-warn">
+                  <span className="stat-value">{multiRoundCount}</span>
+                  <span className="stat-label">複数回必要</span>
+                </div>
+              </>
+            )}
             {doneCount > 0 && (
               <>
                 <div className="stat-divider" />
@@ -243,6 +235,7 @@ export default function App() {
           members={state.members}
           results={results}
           groups={state.groups}
+          valueConstraint={vc}
           onAdd={addMember}
           onRemove={removeMember}
           onUpdate={updateMember}

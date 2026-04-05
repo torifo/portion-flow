@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PortionHolder, DistributionResult, Group } from '../types';
+import type { PortionHolder, DistributionResult, Group, ValueConstraint } from '../types';
 import { WeightSlider } from './WeightSlider';
 import { findPagerEntry } from '../core/pagerIndicator';
 
@@ -9,11 +9,30 @@ interface Props {
   canDelete: boolean;
   groups: Group[];
   isDragging: boolean;
+  valueConstraint: ValueConstraint;
   onUpdate: (patch: Partial<PortionHolder>) => void;
   onDelete: () => void;
   onAssignGroup: (groupId: string | null) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
+}
+
+/** 配分値を 1回あたりの上限で複数ラウンドに分割する */
+function splitIntoRounds(portion: number, max: number, min: number): number[] {
+  if (portion <= 0) return [0];
+  const rounds: number[] = [];
+  let remaining = portion;
+  while (remaining > 0) {
+    const chunk = Math.min(remaining, max);
+    if (chunk < min && rounds.length > 0) {
+      // 最後の端数が min を下回る場合は前のラウンドに積む
+      rounds[rounds.length - 1] += chunk;
+    } else {
+      rounds.push(chunk);
+    }
+    remaining -= chunk;
+  }
+  return rounds;
 }
 
 export function PortionCard({
@@ -22,6 +41,7 @@ export function PortionCard({
   canDelete,
   groups,
   isDragging,
+  valueConstraint,
   onUpdate,
   onDelete,
   onAssignGroup,
@@ -33,10 +53,15 @@ export function PortionCard({
   const isFixed = member.fixedAmount !== null;
   const group = groups.find((g) => g.id === member.groupId);
   const inGroup = !!member.groupId;
+  const groupColor = group?.color;
 
   const [showGroupPicker, setShowGroupPicker] = useState(false);
 
-  const groupColor = group?.color;
+  // 複数回割り当てが必要か
+  const vc = valueConstraint;
+  const needsMultiRound = vc.enabled && portion > vc.max;
+  const rounds = needsMultiRound ? splitIntoRounds(portion, vc.max, vc.min) : null;
+
   const cardStyle: React.CSSProperties = {
     borderLeftColor: groupColor ?? 'var(--border)',
     opacity: isDragging ? 0.4 : 1,
@@ -44,24 +69,17 @@ export function PortionCard({
 
   return (
     <div
-      className={`portion-card${member.done ? ' done' : ''}`}
+      className={`portion-card${member.done ? ' done' : ''}${needsMultiRound ? ' multi-round' : ''}`}
       style={cardStyle}
       draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        onDragStart();
-      }}
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart(); }}
       onDragEnd={onDragEnd}
     >
-      {/* Drag handle + Header */}
+      {/* Header */}
       <div className="card-header">
         <span className="drag-handle" title="ドラッグして移動">⠿</span>
         {group && (
-          <span
-            className="group-dot"
-            style={{ background: group.color }}
-            title={group.name}
-          />
+          <span className="group-dot" style={{ background: group.color }} title={group.name} />
         )}
         <input
           className="name-input"
@@ -75,7 +93,6 @@ export function PortionCard({
           onClick={onDelete}
           disabled={!canDelete}
           title="削除"
-          aria-label="メンバーを削除"
         >
           ✕
         </button>
@@ -84,7 +101,7 @@ export function PortionCard({
       {/* Portion display */}
       <div className="portion-display">
         <span className="portion-value">{portion.toLocaleString()}</span>
-        {pager && (
+        {pager && !needsMultiRound && (
           <span
             className="pager-indicator"
             title={`${pager.label}（${portion}）`}
@@ -94,33 +111,45 @@ export function PortionCard({
             {pager.emoji}
           </span>
         )}
+        {needsMultiRound && (
+          <span className="multi-round-badge" title={`1回の上限(${vc.max})を超えるため${rounds!.length}回に分けて割り当て`}>
+            ×{rounds!.length}回
+          </span>
+        )}
       </div>
 
-      {/* Controls: グループ内はデフォルト固定値OFF可能、グループ外は通常ウェイト */}
+      {/* 複数回の内訳 */}
+      {needsMultiRound && rounds && (
+        <div className="rounds-breakdown">
+          {rounds.map((v, i) => (
+            <span key={i} className="round-chip">
+              <span className="round-num">{i + 1}回目</span>
+              <span className="round-val">{v}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Controls */}
       <div className="card-controls">
         <div className="control-row">
-          {inGroup && (
+          {inGroup ? (
             <label className="toggle-label" title="グループの均等配分から外して個別に設定">
               <input
                 type="checkbox"
                 className="toggle-checkbox"
                 checked={isFixed}
-                onChange={(e) =>
-                  onUpdate({ fixedAmount: e.target.checked ? portion : null })
-                }
+                onChange={(e) => onUpdate({ fixedAmount: e.target.checked ? portion : null })}
               />
               <span className="toggle-text">個別指定</span>
             </label>
-          )}
-          {!inGroup && (
+          ) : (
             <label className="toggle-label">
               <input
                 type="checkbox"
                 className="toggle-checkbox"
                 checked={isFixed}
-                onChange={(e) =>
-                  onUpdate({ fixedAmount: e.target.checked ? portion : null })
-                }
+                onChange={(e) => onUpdate({ fixedAmount: e.target.checked ? portion : null })}
               />
               <span className="toggle-text">固定値</span>
             </label>
@@ -148,7 +177,7 @@ export function PortionCard({
         )}
       </div>
 
-      {/* Footer: memo + done + group picker */}
+      {/* Footer */}
       <div className="card-footer">
         <input
           className="memo-input"

@@ -29,7 +29,7 @@ function createDefaultMember(name = '', groupId: string | null = null): PortionH
 
 function getDefaultState(): AppState {
   return {
-    totalAmount: 120,
+    totalAmount: 400,
     valueConstraint: DEFAULT_CONSTRAINT,
     members: [
       createDefaultMember('メンバー1'),

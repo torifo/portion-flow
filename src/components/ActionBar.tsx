@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { AppState, PortionHolder, DistributionResult, ExportSchema } from '../types';
+import type { AppState, PortionHolder, DistributionResult, ExportSchema, ValueConstraint } from '../types';
 
 interface Props {
   state: AppState;
@@ -7,15 +7,31 @@ interface Props {
   onImport: (state: AppState) => void;
 }
 
+function splitIntoRounds(portion: number, max: number): number[] {
+  const rounds: number[] = [];
+  let remaining = portion;
+  while (remaining > 0) {
+    rounds.push(Math.min(remaining, max));
+    remaining -= max;
+  }
+  return rounds;
+}
+
 function buildCopyText(
   members: PortionHolder[],
   results: DistributionResult[],
-  totalAmount: number
+  totalAmount: number,
+  vc: ValueConstraint
 ): string {
   const lines = [`【Portion-Flow 配分結果】`, `合計値: ${totalAmount.toLocaleString()}`, ''];
   members.forEach((m) => {
     const portion = results.find((r) => r.id === m.id)?.portion ?? 0;
+    const needsRounds = vc.enabled && portion > vc.max;
     let line = `• ${m.name || '(名前未設定)'}: ${portion.toLocaleString()}`;
+    if (needsRounds) {
+      const rounds = splitIntoRounds(portion, vc.max);
+      line += ` (${rounds.map((v, i) => `${i + 1}回目:${v}`).join(' / ')})`;
+    }
     if (m.memo) line += `  ―  ${m.memo}`;
     if (m.done) line += ' ✅';
     lines.push(line);
@@ -34,7 +50,7 @@ export function ActionBar({ state, results, onImport }: Props) {
   };
 
   const handleCopy = async () => {
-    const text = buildCopyText(state.members, results, state.totalAmount);
+    const text = buildCopyText(state.members, results, state.totalAmount, state.valueConstraint);
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(text);

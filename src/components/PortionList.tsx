@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { PortionHolder, DistributionResult, Group } from '../types';
+import type { PortionHolder, DistributionResult, Group, ValueConstraint } from '../types';
 import { PortionCard } from './PortionCard';
 import { WeightSlider } from './WeightSlider';
 
@@ -7,6 +7,7 @@ interface Props {
   members: PortionHolder[];
   results: DistributionResult[];
   groups: Group[];
+  valueConstraint: ValueConstraint;
   onAdd: (groupId?: string | null) => void;
   onRemove: (id: string) => void;
   onUpdate: (id: string, patch: Partial<PortionHolder>) => void;
@@ -20,6 +21,7 @@ export function PortionList({
   members,
   results,
   groups,
+  valueConstraint,
   onAdd,
   onRemove,
   onUpdate,
@@ -109,6 +111,7 @@ export function PortionList({
                   canDelete={canDelete}
                   groups={groups}
                   isDragging={draggedId === member.id}
+                  valueConstraint={valueConstraint}
                   onUpdate={(patch) => onUpdate(member.id, patch)}
                   onDelete={() => onRemove(member.id)}
                   onAssignGroup={(gId) => onAssignGroup(member.id, gId)}

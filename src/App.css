@@ -285,6 +285,16 @@ input  { font-family: inherit; }
 }
 .constraint-reset-btn:hover { background: var(--bg-hover); border-color: var(--text-2); }
 
+.constraint-hint {
+  font-size: 11px;
+  color: var(--text-3);
+  margin: 0;
+}
+
+/* stat warning */
+.stat-warn .stat-value { color: var(--danger); }
+.stat-warn .stat-label { color: var(--danger); }
+
 .summary-stats {
   display: flex;
   align-items: center;
@@ -626,6 +636,55 @@ input  { font-family: inherit; }
 @keyframes pop {
   from { transform: scale(0); }
   to   { transform: scale(1); }
+}
+
+/* Multi-round allocation */
+.portion-card.multi-round {
+  border-left-color: var(--danger) !important;
+}
+
+.multi-round-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--danger);
+  background: var(--danger-dim);
+  border: 1.5px solid var(--danger);
+  border-radius: 999px;
+  padding: 1px 8px;
+  animation: pop .25s ease;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.rounds-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 10px 6px;
+}
+
+.round-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--danger-dim);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.round-num {
+  font-size: 10px;
+  color: var(--danger);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.round-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Controls */
