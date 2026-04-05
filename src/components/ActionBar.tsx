@@ -49,6 +49,7 @@ export function ActionBar({ state, results, onImport }: Props) {
     const schema: ExportSchema = {
       $schema: 'portion-flow-v1',
       totalAmount: state.totalAmount,
+      valueConstraint: state.valueConstraint,
       theme: state.theme,
       members: state.members,
       groups: state.groups,
@@ -78,6 +79,7 @@ export function ActionBar({ state, results, onImport }: Props) {
           theme: parsed.theme,
           members: parsed.members,
           groups: parsed.groups ?? [],
+          valueConstraint: parsed.valueConstraint ?? { enabled: true, min: 0, max: 120 },
         };
         onImport(imported);
         showToast('インポートしました');

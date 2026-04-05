@@ -17,8 +17,15 @@ export interface Group {
 
 export type ThemeName = 'standard' | 'senior' | 'children';
 
+export interface ValueConstraint {
+  enabled: boolean;
+  min: number;
+  max: number;
+}
+
 export interface AppState {
   totalAmount: number;
+  valueConstraint: ValueConstraint;
   members: PortionHolder[];
   groups: Group[];
   theme: ThemeName;
@@ -33,6 +40,7 @@ export interface DistributionResult {
 export interface ExportSchema {
   $schema: 'portion-flow-v1';
   totalAmount: number;
+  valueConstraint: ValueConstraint;
   theme: ThemeName;
   members: PortionHolder[];
   groups: Group[];

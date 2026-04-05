@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { AppState, PortionHolder, ThemeName, Group } from '../types';
+import type { AppState, PortionHolder, ThemeName, Group, ValueConstraint } from '../types';
 import {
   serializeToUrl,
   deserializeFromUrl,
@@ -12,6 +12,8 @@ export const GROUP_COLORS = [
   '#6366f1', '#ec4899', '#f59e0b', '#10b981',
   '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6',
 ];
+
+export const DEFAULT_CONSTRAINT: ValueConstraint = { enabled: true, min: 0, max: 120 };
 
 function createDefaultMember(name = '', groupId: string | null = null): PortionHolder {
   return {
@@ -27,7 +29,8 @@ function createDefaultMember(name = '', groupId: string | null = null): PortionH
 
 function getDefaultState(): AppState {
   return {
-    totalAmount: 400,
+    totalAmount: 120,
+    valueConstraint: DEFAULT_CONSTRAINT,
     members: [
       createDefaultMember('メンバー1'),
       createDefaultMember('メンバー2'),
@@ -37,11 +40,19 @@ function getDefaultState(): AppState {
   };
 }
 
+function migrateState(raw: AppState): AppState {
+  return {
+    ...raw,
+    groups: raw.groups ?? [],
+    valueConstraint: raw.valueConstraint ?? DEFAULT_CONSTRAINT,
+  };
+}
+
 function loadInitialState(): AppState {
   const fromUrl = deserializeFromUrl(window.location.search);
-  if (fromUrl) return { ...fromUrl, groups: fromUrl.groups ?? [] };
+  if (fromUrl) return migrateState(fromUrl);
   const fromLs = loadFromLocalStorage();
-  if (fromLs) return { ...fromLs, groups: fromLs.groups ?? [] };
+  if (fromLs) return migrateState(fromLs);
   return getDefaultState();
 }
 
@@ -61,6 +72,13 @@ export function usePortionState() {
 
   const setTotalAmount = useCallback((amount: number) => {
     setState((prev) => ({ ...prev, totalAmount: amount }));
+  }, []);
+
+  const setValueConstraint = useCallback((patch: Partial<ValueConstraint>) => {
+    setState((prev) => ({
+      ...prev,
+      valueConstraint: { ...prev.valueConstraint, ...patch },
+    }));
   }, []);
 
   const setTheme = useCallback((theme: ThemeName) => {
@@ -89,7 +107,6 @@ export function usePortionState() {
 
   const updateMember = useCallback((id: string, patch: Partial<PortionHolder>) => {
     setState((prev) => {
-      // Groupメンバーのweightを変更した場合、同グループ全員に反映
       if (patch.weight !== undefined) {
         const member = prev.members.find((m) => m.id === id);
         if (member?.groupId) {
@@ -129,7 +146,6 @@ export function usePortionState() {
 
   const updateGroup = useCallback((id: string, patch: Partial<Group>) => {
     setState((prev) => {
-      // グループのweight変更時、所属メンバーに反映
       const updated = prev.groups.map((g) => (g.id === id ? { ...g, ...patch } : g));
       let members = prev.members;
       if (patch.weight !== undefined) {
@@ -166,12 +182,13 @@ export function usePortionState() {
   }, []);
 
   const importState = useCallback((imported: AppState) => {
-    setState({ ...imported, groups: imported.groups ?? [] });
+    setState(migrateState(imported));
   }, []);
 
   return {
     state,
     setTotalAmount,
+    setValueConstraint,
     setTheme,
     addMember,
     removeMember,
