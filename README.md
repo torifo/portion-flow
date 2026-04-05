@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# Portion-Flow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 値を加重配分する Web ユーティリティ
 
-Currently, two official plugins are available:
+**[→ アプリを開く](https://torifo.github.io/portion-flow/)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 概要
 
-## React Compiler
+Portion-Flow は、合計値をメンバーのウェイト比に従って整数配分するツールです。  
+1人1回あたりの上限（デフォルト 0〜120）を設定でき、上限を超える場合は複数回に分割した内訳を自動表示します。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 主な機能
 
-## Expanding the ESLint configuration
+| 機能 | 説明 |
+|------|------|
+| **加重配分** | ハミルトン方式（最大剰余法）で端数なく整数配分 |
+| **固定値** | 特定メンバーに固定値を割り当て、残りを比例配分 |
+| **グループ** | メンバーをグループ化し、グループウェイトで一括管理 |
+| **ドラッグ移動** | カードをグループ間またはグループ外へドラッグ&ドロップ |
+| **制限設定** | 1人1回あたりの割り当て上限を設定（複数回の内訳を表示） |
+| **テーマ切替** | Standard / シニア向け / こども向けの3テーマ |
+| **エクスポート/インポート** | JSON 形式で状態を保存・読み込み |
+| **コピー** | 配分結果をクリップボードにコピー |
+| **URL共有** | 状態を URL に圧縮エンコード、ブラウザ間で共有可能 |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 使い方
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **合計値** を入力する
+2. **メンバー** を追加し、名前とウェイトを設定する
+3. 必要に応じて **グループ** を作成してメンバーを割り当てる
+4. 配分結果を確認し、**コピー** または **エクスポート** で共有する
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 制限設定（⚙ ボタン）
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- 「1人1回あたりの割り当て値を制限する」をオンにすると有効化
+- デフォルト: 最小 0 〜 最大 120
+- 上限を超えるメンバーにはカード上で複数回の内訳を表示
+
+## 技術スタック
+
+- **React 19** + **TypeScript** + **Vite**
+- 状態管理: `useState` + `useCallback`
+- URL シリアライズ: `lz-string`
+- テスト: `vitest` + `fast-check`（プロパティベーステスト）
+- デプロイ: **GitHub Pages** (GitHub Actions)
+
+## ローカル開発
+
+```bash
+npm install
+npm run dev      # 開発サーバー起動
+npm run build    # プロダクションビルド
+npm test         # テスト実行
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ライセンス
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+MIT
