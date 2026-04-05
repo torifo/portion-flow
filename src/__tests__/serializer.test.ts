@@ -27,6 +27,11 @@ function arbitraryMember(): fc.Arbitrary<PortionHolder> {
 function arbitraryAppState(): fc.Arbitrary<AppState> {
   return fc.record({
     totalAmount: fc.integer({ min: 1, max: 99999 }),
+    valueConstraint: fc.record({
+      enabled: fc.boolean(),
+      min: fc.integer({ min: 0, max: 50 }),
+      max: fc.integer({ min: 51, max: 200 }),
+    }),
     members: fc.array(arbitraryMember(), { minLength: 1, maxLength: 10 }),
     groups: fc.constant([]),
     theme: fc.constantFrom('standard' as const, 'senior' as const, 'children' as const),
@@ -61,6 +66,7 @@ describe('Serializer', () => {
     const { saveToLocalStorage, loadFromLocalStorage } = await import('../core/serializer');
     const state: AppState = {
       totalAmount: 400,
+      valueConstraint: { enabled: true, min: 0, max: 120 },
       theme: 'standard',
       groups: [],
       members: [
