@@ -20,6 +20,7 @@ export function distribute(
       return { id: m.id, portion: m.fixedAmount, remainder: 0 };
     }
     if (weightSum === 0) {
+      // All variable members have weight 0 → they each get 0
       return { id: m.id, portion: 0, remainder: 0 };
     }
     const exact = (remaining * m.weight) / weightSum;
@@ -30,20 +31,24 @@ export function distribute(
     };
   });
 
-  const currentSum = results.reduce((s, r) => s + r.portion, 0);
-  const deficit = totalAmount - currentSum;
+  // 最大剰余法: weight > 0 のメンバーのみ剰余の大きい順に +1
+  // (weight === 0 のメンバーは Portion を 0 に保つ)
+  if (weightSum > 0) {
+    const currentSum = results.reduce((s, r) => s + r.portion, 0);
+    const deficit = totalAmount - currentSum;
 
-  const sorted = [...results]
-    .filter((r) => {
-      const m = members.find((m) => m.id === r.id);
-      return m?.fixedAmount === null;
-    })
-    .sort((a, b) => b.remainder - a.remainder);
+    const sorted = [...results]
+      .filter((r) => {
+        const m = members.find((m) => m.id === r.id);
+        return m?.fixedAmount === null && (m?.weight ?? 0) > 0;
+      })
+      .sort((a, b) => b.remainder - a.remainder);
 
-  for (let i = 0; i < deficit; i++) {
-    const target = sorted[i];
-    const idx = results.findIndex((r) => r.id === target.id);
-    results[idx].portion += 1;
+    for (let i = 0; i < deficit && i < sorted.length; i++) {
+      const target = sorted[i];
+      const idx = results.findIndex((r) => r.id === target.id);
+      results[idx].portion += 1;
+    }
   }
 
   return results;
