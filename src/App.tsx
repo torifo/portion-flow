@@ -57,7 +57,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const r = distribute(state.totalAmount, state.members);
+      const r = distribute(state.totalAmount, state.members, state.groups);
       setResults(r);
       setFixedError('');
     } catch (e) {
@@ -237,6 +237,7 @@ export default function App() {
           results={results}
           groups={state.groups}
           valueConstraint={vc}
+          totalAmount={state.totalAmount}
           onAdd={addMember}
           onRemove={removeMember}
           onUpdate={updateMember}

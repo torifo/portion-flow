@@ -13,6 +13,7 @@ export interface Group {
   name: string;
   color: string;
   weight: number;
+  allocatedAmount: number | null; // null = 全体比重配分に参加、数値 = グループ内配分額を固定
 }
 
 export type ThemeName = 'standard' | 'senior' | 'children';

@@ -43,7 +43,10 @@ function getDefaultState(): AppState {
 function migrateState(raw: AppState): AppState {
   return {
     ...raw,
-    groups: raw.groups ?? [],
+    groups: (raw.groups ?? []).map((g) => ({
+      ...g,
+      allocatedAmount: g.allocatedAmount ?? null,
+    })),
     valueConstraint: raw.valueConstraint ?? DEFAULT_CONSTRAINT,
   };
 }
@@ -139,6 +142,7 @@ export function usePortionState() {
         name: `グループ${prev.groups.length + 1}`,
         color: GROUP_COLORS[colorIdx],
         weight: 1,
+        allocatedAmount: null,
       };
       return { ...prev, groups: [...prev.groups, newGroup] };
     });
