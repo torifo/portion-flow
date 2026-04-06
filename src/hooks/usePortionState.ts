@@ -185,6 +185,10 @@ export function usePortionState() {
     setState(migrateState(imported));
   }, []);
 
+  const resetState = useCallback(() => {
+    setState(getDefaultState());
+  }, []);
+
   return {
     state,
     setTotalAmount,
@@ -198,5 +202,6 @@ export function usePortionState() {
     removeGroup,
     assignGroup,
     importState,
+    resetState,
   };
 }

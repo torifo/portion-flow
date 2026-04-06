@@ -5,6 +5,7 @@ interface Props {
   state: AppState;
   results: DistributionResult[];
   onImport: (state: AppState) => void;
+  onReset: () => void;
 }
 
 function splitIntoRounds(portion: number, max: number): number[] {
@@ -39,10 +40,22 @@ function buildCopyText(
   return lines.join('\n');
 }
 
-export function ActionBar({ state, results, onImport }: Props) {
+export function ActionBar({ state, results, onImport, onReset }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleReset = () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setTimeout(() => setConfirmReset(false), 3000);
+      return;
+    }
+    onReset();
+    setConfirmReset(false);
+    showToast('リセットしました');
+  };
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -121,6 +134,14 @@ export function ActionBar({ state, results, onImport }: Props) {
         <button className="action-btn" onClick={() => fileInputRef.current?.click()} title="JSONをインポート">
           <span className="btn-icon">📥</span>
           <span className="btn-label">インポート</span>
+        </button>
+        <button
+          className={`action-btn reset-btn${confirmReset ? ' reset-confirm' : ''}`}
+          onClick={handleReset}
+          title={confirmReset ? 'もう一度押すと初期化します' : 'データをすべてリセット'}
+        >
+          <span className="btn-icon">{confirmReset ? '⚠️' : '🗑️'}</span>
+          <span className="btn-label">{confirmReset ? '本当に？' : 'リセット'}</span>
         </button>
         <input
           ref={fileInputRef}

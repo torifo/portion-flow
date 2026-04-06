@@ -22,6 +22,7 @@ export default function App() {
     removeGroup,
     assignGroup,
     importState,
+    resetState,
   } = usePortionState();
 
   const { setTheme: applyThemeCss } = useTheme();
@@ -229,7 +230,7 @@ export default function App() {
           {fixedError && <p className="error-banner">{fixedError}</p>}
         </div>
 
-        <ActionBar state={state} results={results} onImport={importState} />
+        <ActionBar state={state} results={results} onImport={importState} onReset={resetState} />
 
         <PortionList
           members={state.members}
