@@ -454,6 +454,68 @@ input  { font-family: inherit; }
 
 .group-weight-slider { width: 160px; flex-shrink: 0; }
 
+/* グループ配分固定行 */
+.group-alloc-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--group-color, var(--accent)) 5%, var(--bg-card));
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.group-alloc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.group-alloc-toggle input { width: 14px; height: 14px; accent-color: var(--group-color, var(--accent)); }
+
+.group-alloc-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.group-alloc-input {
+  width: 80px;
+  padding: 3px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.group-alloc-input::-webkit-inner-spin-button,
+.group-alloc-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.group-alloc-input:focus { outline: none; border-color: var(--group-color, var(--border-focus)); }
+
+.group-alloc-sep { color: var(--text-3); font-size: 12px; }
+.group-alloc-total { color: var(--text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.group-alloc-pct {
+  font-size: 11px;
+  color: var(--group-color, var(--accent));
+  font-weight: 600;
+}
+
+.group-alloc-result {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
 .group-member-count {
   font-size: 11px;
   color: var(--text-3);
@@ -698,6 +760,36 @@ input  { font-family: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Portion ratio bar */
+.portion-ratio-bar {
+  position: relative;
+  margin: 0 10px 6px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.portion-ratio-fill {
+  height: 100%;
+  border-radius: 999px;
+  opacity: .7;
+  transition: width .3s ease;
+  flex-shrink: 0;
+}
+.portion-ratio-label {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  font-size: 10px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-card);
+  padding: 0 2px;
+  line-height: 1;
+}
+
 /* Controls */
 .card-controls {
   padding: 0 10px 6px;
@@ -726,6 +818,17 @@ input  { font-family: inherit; }
   margin-top: 2px;
   padding-left: 2px;
   font-style: italic;
+}
+
+.weight-hint {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+  padding-left: 2px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Fixed amount input */

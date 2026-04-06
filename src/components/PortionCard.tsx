@@ -11,6 +11,7 @@ interface Props {
   groups: Group[];
   isDragging: boolean;
   valueConstraint: ValueConstraint;
+  totalAmount: number;
   onUpdate: (patch: Partial<PortionHolder>) => void;
   onDelete: () => void;
   onAssignGroup: (groupId: string | null) => void;
@@ -43,6 +44,7 @@ export function PortionCard({
   groups,
   isDragging,
   valueConstraint,
+  totalAmount,
   onUpdate,
   onDelete,
   onAssignGroup,
@@ -50,6 +52,7 @@ export function PortionCard({
   onDragEnd,
 }: Props) {
   const portion = result?.portion ?? 0;
+  const portionPct = totalAmount > 0 ? (portion / totalAmount * 100) : 0;
   const pager = findPagerEntry(portion);
   const isFixed = member.fixedAmount !== null;
   const group = groups.find((g) => g.id === member.groupId);
@@ -119,6 +122,15 @@ export function PortionCard({
         )}
       </div>
 
+      {/* 合計に対する割合 */}
+      <div className="portion-ratio-bar">
+        <div
+          className="portion-ratio-fill"
+          style={{ width: `${Math.min(portionPct, 100)}%`, background: groupColor ?? 'var(--accent)' }}
+        />
+        <span className="portion-ratio-label">{portionPct.toFixed(1)}%</span>
+      </div>
+
       {/* 複数回の内訳 */}
       {needsMultiRound && rounds && (
         <div className="rounds-breakdown">
@@ -173,8 +185,11 @@ export function PortionCard({
             />
           )}
         </div>
-        {inGroup && !isFixed && (
-          <p className="group-hint">グループウェイトに連動</p>
+        {!isFixed && (
+          <p className="weight-hint">
+            比重 {member.weight}
+            {inGroup ? ' ← グループウェイト連動' : ' （相対値・他のメンバーとの比率）'}
+          </p>
         )}
       </div>
 
