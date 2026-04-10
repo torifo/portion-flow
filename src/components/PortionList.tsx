@@ -1,4 +1,4 @@
-import { useState, useCallback, type DragEvent, type ChangeEvent } from 'react';
+import { useState, useCallback, useEffect, useRef, type DragEvent, type ChangeEvent } from 'react';
 import type { CSSProperties } from 'react';
 import type { PortionHolder, DistributionResult, Group, ValueConstraint } from '../types';
 import { PortionCard } from './PortionCard';
@@ -100,6 +100,36 @@ export function PortionList({
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overZone, setOverZone] = useState<string | null>(null);
 
+  // Auto-scroll during drag
+  const scrollAnimRef = useRef<number | null>(null);
+  const dragClientY = useRef(0);
+
+  useEffect(() => {
+    if (!draggedId) {
+      if (scrollAnimRef.current !== null) {
+        cancelAnimationFrame(scrollAnimRef.current);
+        scrollAnimRef.current = null;
+      }
+      return;
+    }
+    const ZONE = 80;
+    const SPEED = 10;
+    const tick = () => {
+      const y = dragClientY.current;
+      const h = window.innerHeight;
+      if (y < ZONE) {
+        window.scrollBy(0, -SPEED * (1 - y / ZONE));
+      } else if (y > h - ZONE) {
+        window.scrollBy(0, SPEED * (1 - (h - y) / ZONE));
+      }
+      scrollAnimRef.current = requestAnimationFrame(tick);
+    };
+    scrollAnimRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (scrollAnimRef.current !== null) cancelAnimationFrame(scrollAnimRef.current);
+    };
+  }, [draggedId]);
+
   const handleDrop = useCallback(
     (targetGroupId: string | null) => {
       if (draggedId) onAssignGroup(draggedId, targetGroupId);
@@ -114,6 +144,7 @@ export function PortionList({
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       setOverZone(zoneKey);
+      dragClientY.current = e.clientY;
     },
     onDragLeave: () => setOverZone(null),
     onDrop: (e: DragEvent) => {

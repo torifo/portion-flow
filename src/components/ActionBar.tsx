@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import type { AppState, PortionHolder, DistributionResult, ExportSchema, ValueConstraint } from '../types';
+import { GuideModal } from './GuideModal';
 
 interface Props {
   state: AppState;
@@ -45,6 +46,9 @@ export function ActionBar({ state, results, onImport, onReset }: Props) {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
+  const [exportName, setExportName] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
 
   const handleReset = () => {
     if (!confirmReset) {
@@ -74,7 +78,7 @@ export function ActionBar({ state, results, onImport, onReset }: Props) {
     setFallbackText(text);
   };
 
-  const handleExport = () => {
+  const doExport = (filename: string) => {
     const schema: ExportSchema = {
       $schema: 'portion-flow-v1',
       totalAmount: state.totalAmount,
@@ -87,9 +91,15 @@ export function ActionBar({ state, results, onImport, onReset }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `portion-flow-${new Date().toISOString().slice(0, 10)}.json`;
+    const safeName = filename.trim() || `portion-flow-${new Date().toISOString().slice(0, 10)}`;
+    a.download = `${safeName}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExport = () => {
+    setExportName('');
+    setExportModal(true);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -136,6 +146,14 @@ export function ActionBar({ state, results, onImport, onReset }: Props) {
           <span className="btn-label">インポート</span>
         </button>
         <button
+          className="action-btn"
+          onClick={() => setShowGuide(true)}
+          title="使用ガイドを表示"
+        >
+          <span className="btn-icon">❓</span>
+          <span className="btn-label">ガイド</span>
+        </button>
+        <button
           className={`action-btn reset-btn${confirmReset ? ' reset-confirm' : ''}`}
           onClick={handleReset}
           title={confirmReset ? 'もう一度押すと初期化します' : 'データをすべてリセット'}
@@ -155,6 +173,41 @@ export function ActionBar({ state, results, onImport, onReset }: Props) {
       {toast && (
         <div className={`toast${toast.ok ? '' : ' toast-error'}`} role="alert">
           {toast.ok ? '✓ ' : '⚠ '}{toast.msg}
+        </div>
+      )}
+
+      {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+
+      {exportModal && (
+        <div className="fallback-overlay" onClick={() => setExportModal(false)}>
+          <div className="fallback-copy export-modal" onClick={(e) => e.stopPropagation()}>
+            <p className="fallback-title">📤 エクスポート</p>
+            <div className="export-name-row">
+              <input
+                className="export-name-input"
+                type="text"
+                placeholder={`portion-flow-${new Date().toISOString().slice(0, 10)}`}
+                value={exportName}
+                onChange={(e) => setExportName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { doExport(exportName); setExportModal(false); }
+                  if (e.key === 'Escape') setExportModal(false);
+                }}
+                autoFocus
+              />
+              <span className="export-ext">.json</span>
+            </div>
+            <p className="constraint-hint">空欄の場合は日付が自動入力されます</p>
+            <div className="export-modal-actions">
+              <button className="action-btn" onClick={() => setExportModal(false)}>キャンセル</button>
+              <button
+                className="action-btn export-confirm-btn"
+                onClick={() => { doExport(exportName); setExportModal(false); }}
+              >
+                ダウンロード
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

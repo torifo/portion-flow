@@ -66,7 +66,7 @@ export default function App() {
         setResults(state.members.map((m) => ({ id: m.id, portion: 0, remainder: 0 })));
       }
     }
-  }, [state.totalAmount, state.members]);
+  }, [state.totalAmount, state.members, state.groups]);
 
   const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
